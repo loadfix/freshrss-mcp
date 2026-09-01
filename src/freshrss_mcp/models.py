@@ -62,8 +62,7 @@ class Article(BaseModel):
     categories: List[str] = Field(default_factory=list)
     origin: Optional[dict] = None
     alternate: Optional[List[dict]] = None
-    
-    # Computed properties
+    canonical: Optional[List[dict]] = None
     crawlTimeMsec: Optional[str] = None
     timestampUsec: Optional[str] = None
     
@@ -84,10 +83,12 @@ class Article(BaseModel):
     
     @property
     def url(self) -> Optional[str]:
-        """Get the article URL from alternate links."""
-        if self.alternate:
-            for link in self.alternate:
-                if link.get("type") == "text/html":
+        """Get the article URL from alternate or canonical links."""
+        for group in (self.alternate, self.canonical):
+            if not group:
+                continue
+            for link in group:
+                if link.get("type") in (None, "text/html") and link.get("href"):
                     return link.get("href")
         return None
     
